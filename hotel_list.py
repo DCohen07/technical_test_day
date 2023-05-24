@@ -31,24 +31,19 @@ df_hotel["LONGITUDE"] = np.nan
 df_hotel["LATITUDE"] = np.nan
 
 
+#TODO : Tester fonction asynchrone / Multithreading#
+
 for i in range(df_hotel.shape[0]):
+    #TODO : Tester fonction asynchrone / Multithreading#
+
     print(i)
     requete = requests.get("https://api-adresse.data.gouv.fr/search/?q=" + df_hotel["ADRESSE"].loc[i] + "&postcode=" + str(df_hotel["CODE POSTAL"].loc[i])).json()
-    try:
-        requete["features"][0]["geometry"]["coordinates"]
-    except:
-        "No coordinates"
-    else:
-        coordinates = requete["features"][0]["geometry"]["coordinates"]
     
+    try:
+        coordinates = requete["features"][0]["geometry"]["coordinates"]
         df_hotel["LONGITUDE"].loc[i] = coordinates[0]
         df_hotel["LATITUDE"].loc[i] = coordinates[1]
+    
+    except:
+        "No coordinates"
 
-
-
-df_hotel.loc[6]
-
-requete = requests.get("https://api-adresse.data.gouv.fr/search/?q=" + df_hotel["ADRESSE"].loc[6] + "&postcode=" + str(df_hotel["CODE POSTAL"].loc[6])).json()
-IndexError(requete["features"][0]["geometry"]["coordinates"])
-coordinates = requete["features"][0]["geometry"]["coordinates"]
-requete
