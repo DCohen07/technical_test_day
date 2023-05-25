@@ -20,6 +20,14 @@ data_link = links[1]['href']
 file = wget.download(data_link)
 
 
+import pandas as pd
+import numpy as np
+import threading
+import requests
+import time
+import concurrent.futures
+
+
 df = pd.read_csv("0440c8ba-71e6-41f4-bbaa-1c792277de76", delimiter=';',encoding="ISO-8859-1")
 
 df_hotel = df[df["TYPE D'HÉBERGEMENT"] == "HÔTEL DE TOURISME"].reset_index(drop = True)
@@ -67,7 +75,10 @@ urls = ["https://api-adresse.data.gouv.fr/search/?q=" + add + "&postcode=" + cod
 a = []
 b = []
 
-for url in urls:
+liste = [i for i in range(len(urls))]
+
+
+def func(url):
     requete = requests.get(url).json()
 
     if requete["features"] != []:
@@ -75,19 +86,17 @@ for url in urls:
         a.append(coordinates[0])
         b.append(coordinates[1])
     else:
-        a.append("No data")
-        b.append("No data")
+        pass
     
+processed_results = []
 
-
-"""start = time.perf_counter()
+start = time.perf_counter()
 threads = []
-for url in urls[0:50]:
-    t = threading.Thread(target=func, args=(url,))
-    t.start()
-    threads.append(t)
-for thread in threads:
-    thread.join()
+with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        results = [executor.submit(func, url) for url in urls]
+        for f in concurrent.futures.as_completed(results):
+            processed_results.append(f.result())
+
 finish = time.perf_counter()
 print(f'Finished in {round(finish-start, 2)} second(s)')
-"""
+
