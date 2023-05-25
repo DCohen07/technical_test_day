@@ -24,17 +24,16 @@ df = pd.read_csv("0440c8ba-71e6-41f4-bbaa-1c792277de76", delimiter=';',encoding=
 
 df_hotel = df[df["TYPE D'HÉBERGEMENT"] == "HÔTEL DE TOURISME"].reset_index(drop = True)
 
-
 df_hotel["ADRESSE"] = df_hotel["ADRESSE"].apply(lambda x: x.replace(" ", "+"))
 
 df_hotel["LONGITUDE"] = np.nan
 df_hotel["LATITUDE"] = np.nan
 
+adresse = df_hotel["ADRESSE"]
+code_postal = [str(i) for i in df_hotel["CODE POSTAL"]]
 
-#TODO : Tester fonction asynchrone / Multithreading#
-
+"""
 for i in range(df_hotel.shape[0]):
-    #TODO : Tester fonction asynchrone / Multithreading#
 
     print(i)
     requete = requests.get("https://api-adresse.data.gouv.fr/search/?q=" + df_hotel["ADRESSE"].loc[i] + "&postcode=" + str(df_hotel["CODE POSTAL"].loc[i])).json()
@@ -43,7 +42,52 @@ for i in range(df_hotel.shape[0]):
         coordinates = requete["features"][0]["geometry"]["coordinates"]
         df_hotel["LONGITUDE"].loc[i] = coordinates[0]
         df_hotel["LATITUDE"].loc[i] = coordinates[1]
-    
     except:
         "No coordinates"
+# appel de la fonction
+"""
 
+
+"""
+for add, code in zip(adresse, code_postal):
+    print(add)
+
+    requete = requests.get("https://api-adresse.data.gouv.fr/search/?q=" + add + "&postcode=" + code).json()
+
+    try:
+        coordinates = requete["features"][0]["geometry"]["coordinates"]
+        a.append(coordinates[0])
+        b.append(coordinates[1])
+    except:
+        "No coordinates"
+"""
+
+urls = ["https://api-adresse.data.gouv.fr/search/?q=" + add + "&postcode=" + code for add,code in zip(adresse, code_postal)]
+
+a = []
+b = []
+
+for url in urls:
+    requete = requests.get(url).json()
+
+    if requete["features"] != []:
+        coordinates = requete["features"][0]["geometry"]["coordinates"]
+        a.append(coordinates[0])
+        b.append(coordinates[1])
+    else:
+        a.append("No data")
+        b.append("No data")
+    
+
+
+"""start = time.perf_counter()
+threads = []
+for url in urls[0:50]:
+    t = threading.Thread(target=func, args=(url,))
+    t.start()
+    threads.append(t)
+for thread in threads:
+    thread.join()
+finish = time.perf_counter()
+print(f'Finished in {round(finish-start, 2)} second(s)')
+"""
